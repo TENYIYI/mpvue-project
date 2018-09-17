@@ -1,5 +1,5 @@
 <template>
-  <div class="container" @click="clickHandle('test click', $event)">
+  <div class="container">
 
     <div class="userinfo" @click="bindViewTap">
       <img class="userinfo-avatar" v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" background-size="cover" />
@@ -13,24 +13,20 @@
         <card :text="motto"></card>
       </div>
     </div>
-
-    <form class="form-container">
-      <input type="text" class="form-control" v-model="motto" placeholder="v-model" />
-      <input type="text" class="form-control" v-model.lazy="motto" placeholder="v-model.lazy" />
-    </form>
     <a href="/pages/counter/main" class="counter">去往Vuex示例页面</a>
+    <button open-type="getUserInfo" @getuserinfo="bindGetUserInfo" @click="getUserInfo1">获取权限</button>
   </div>
 </template>
 
 <script>
-import card from '@/components/card'
+import card from "@/components/card";
 
 export default {
-  data () {
+  data() {
     return {
-      motto: 'Hello World',
+      motto: "Hello World",
       userInfo: {}
-    }
+    };
   },
 
   components: {
@@ -38,32 +34,70 @@ export default {
   },
 
   methods: {
-    bindViewTap () {
-      const url = '../logs/main'
-      wx.navigateTo({ url })
+    bindViewTap() {
+      const url = "../logs/main";
+      wx.navigateTo({ url });
     },
-    getUserInfo () {
-      // 调用登录接口
-      wx.login({
-        success: () => {
-          wx.getUserInfo({
-            success: (res) => {
-              this.userInfo = res.userInfo
-            }
-          })
+    getSetting() {
+      const that=this;
+      wx.getSetting({
+        success: function(res) {
+          if (res.authSetting["scope.userInfo"]) {
+            wx.getUserInfo({
+              success: function(res) {
+                that.userInfo = res.userInfo;
+                console.log(res.userInfo);
+                //用户已经授权过
+                console.log("用户已经授权过");
+                // 调用登录接口
+                // wx.login({
+                //   success: () => {
+                //     wx.getUserInfo({
+                //       success: res => {
+                //         this.userInfo = res.userInfo;
+                //       }
+                //     });
+                //   }
+                // });
+              }
+            });
+          } else {
+            console.log("用户还未授权过");
+          }
         }
-      })
+      });
     },
-    clickHandle (msg, ev) {
-      console.log('clickHandle:', msg, ev)
+    getUserInfo1() {
+      console.log("click事件首先触发");
+      // 判断小程序的API，回调，参数，组件等是否在当前版本可用。  为false 提醒用户升级微信版本
+      // console.log(wx.canIUse('button.open-type.getUserInfo'))
+      if (wx.canIUse("button.open-type.getUserInfo")) {
+        // 用户版本可用
+      } else {
+        console.log("请升级微信版本");
+      }
+    },
+    bindGetUserInfo(e) {
+      // console.log(e.mp.detail.rawData)
+      if (e.mp.detail.rawData) {
+        //用户按了允许授权按钮
+        console.log("用户按了允许授权按钮");
+        this.getSetting();
+      } else {
+        //用户按了拒绝按钮
+        console.log("用户按了拒绝按钮");
+      }
     }
   },
-
-  created () {
+  mounted() {
+    // 一进来看看用户是否授权过
+    this.getSetting();
+  },
+  created() {
     // 调用应用实例的方法获取全局数据
-    this.getUserInfo()
+    // this.getUserInfo();
   }
-}
+};
 </script>
 
 <style scoped>
